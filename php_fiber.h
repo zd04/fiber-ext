@@ -62,3 +62,7 @@ ZEND_END_MODULE_GLOBALS(fiber)
 #define FIBER_G(v) ZEND_MODULE_GLOBALS_ACCESSOR(fiber, v)
 
 #endif	/* PHP_FIBER_H */
+/*
+ * vim: sw=4 ts=4
+ * vim600: fdm=marker
+ */

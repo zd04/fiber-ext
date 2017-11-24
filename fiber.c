@@ -14,11 +14,11 @@
 #include "zend_exceptions.h"
 #include "zend_closures.h"
 
-/* PHP 7.3 compatibility macro */
+/* PHP 7.3 compatibility macro {{{*/
 #ifndef GC_ADDREF
 # define GC_ADDREF(ref) ++GC_REFCOUNT(ref)
 # define GC_DELREF(ref) --GC_REFCOUNT(ref)
-#endif
+#endif/*}}}*/
 
 ZEND_API zend_class_entry *zend_ce_fiber;
 static zend_object_handlers zend_fiber_handlers;
@@ -382,7 +382,7 @@ ZEND_METHOD(Fiber, reset)
 }
 /* }}} */
 
-static void fiber_interrupt_function(zend_execute_data *execute_data)
+static void fiber_interrupt_function(zend_execute_data *execute_data)/*{{{*/
 {
 	const zend_op *opline;
 	zend_fiber *fiber;
@@ -438,9 +438,9 @@ static void fiber_interrupt_function(zend_execute_data *execute_data)
 	if (orig_interrupt_function) {
 		orig_interrupt_function(execute_data);
 	}
-}
+}/*}}}*/
 
-int fiber_terminate_opcode_handler(zend_execute_data *execute_data) /* {{{ */
+static int fiber_terminate_opcode_handler(zend_execute_data *execute_data) /* {{{ */
 {
 	zend_fiber *fiber = FIBER_G(current_fiber);
 
@@ -523,22 +523,22 @@ ZEND_METHOD(Fiber, __wakeup)
 }
 /* }}} */
 
-ZEND_BEGIN_ARG_INFO_EX(arginfo_fiber_create, 0, 0, 0)
+ZEND_BEGIN_ARG_INFO_EX(arginfo_fiber_create, 0, 0, 0)/*{{{*/
 	ZEND_ARG_OBJ_INFO(0, closure, Closure, 0)
-ZEND_END_ARG_INFO()
+ZEND_END_ARG_INFO()/*}}}*/
 
-ZEND_BEGIN_ARG_INFO(arginfo_fiber_void, 0)
-ZEND_END_ARG_INFO()
+ZEND_BEGIN_ARG_INFO(arginfo_fiber_void, 0)/*{{{*/
+ZEND_END_ARG_INFO()/*}}}*/
 
-ZEND_BEGIN_ARG_INFO_EX(arginfo_fiber_resume, 0, 0, 0)
+ZEND_BEGIN_ARG_INFO_EX(arginfo_fiber_resume, 0, 0, 0)/*{{{*/
 	ZEND_ARG_VARIADIC_INFO(0, vars)
-ZEND_END_ARG_INFO()
+ZEND_END_ARG_INFO()/*}}}*/
 
-ZEND_BEGIN_ARG_INFO(arginfo_fiber_yield, 0)
+ZEND_BEGIN_ARG_INFO(arginfo_fiber_yield, 0)/*{{{*/
 	ZEND_ARG_INFO(0, ret)
-ZEND_END_ARG_INFO()
+ZEND_END_ARG_INFO()/*}}}*/
 
-static const zend_function_entry fiber_functions[] = {
+static const zend_function_entry fiber_functions[] = {/*{{{*/
 	ZEND_ME(Fiber, __construct, arginfo_fiber_create, ZEND_ACC_PUBLIC)
 	ZEND_ME(Fiber, reset,       arginfo_fiber_create, ZEND_ACC_PUBLIC)
 	ZEND_ME(Fiber, resume,      arginfo_fiber_resume, ZEND_ACC_PUBLIC)
@@ -546,7 +546,7 @@ static const zend_function_entry fiber_functions[] = {
 	ZEND_ME(Fiber, status,      arginfo_fiber_void,   ZEND_ACC_PUBLIC)
 	ZEND_ME(Fiber, __wakeup,    arginfo_fiber_void,   ZEND_ACC_PUBLIC)
 	ZEND_FE_END
-};
+};/*}}}*/
 
  /* {{{ PHP_MINIT_FUNCTION
   **/
@@ -656,9 +656,13 @@ zend_module_entry fiber_module_entry = {
 };
 /* }}} */
 
-#ifdef COMPILE_DL_FIBER
+#ifdef COMPILE_DL_FIBER/*{{{*/
 # ifdef ZTS
 ZEND_TSRMLS_CACHE_DEFINE()
 # endif
 ZEND_GET_MODULE(fiber)
-#endif
+#endif/*}}}*/
+/*
+ * vim: sw=4 ts=4
+ * vim600: fdm=marker
+ */
