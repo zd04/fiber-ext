@@ -445,7 +445,6 @@ static int fiber_terminate_opcode_handler(zend_execute_data *execute_data) /* {{
 	zend_fiber *fiber = FIBER_G(current_fiber);
 
 	ZEND_ASSERT(fiber != NULL);
-	ZEND_ASSERT(EG(vm_stack) == fiber->stack);
 
 	zend_vm_stack_destroy();
 
