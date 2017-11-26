@@ -384,7 +384,6 @@ ZEND_METHOD(Fiber, reset)
 
 static void fiber_interrupt_function(zend_execute_data *execute_data)/*{{{*/
 {
-	const zend_op *opline;
 	zend_fiber *fiber;
 
 	if (FIBER_G(pending_interrupt)) {
