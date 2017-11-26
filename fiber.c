@@ -20,7 +20,7 @@
 # define GC_DELREF(ref) --GC_REFCOUNT(ref)
 #endif/*}}}*/
 
-ZEND_API zend_class_entry *zend_ce_fiber;
+PHP_FIBER_API zend_class_entry *zend_ce_fiber;
 static zend_object_handlers zend_fiber_handlers;
 
 static zend_object *zend_fiber_create(zend_class_entry *ce);
