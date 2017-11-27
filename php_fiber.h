@@ -12,8 +12,6 @@ extern zend_module_entry fiber_module_entry;
 ZEND_TSRMLS_CACHE_EXTERN()
 # endif
 
-extern ZEND_API zend_class_entry *zend_ce_fiber;
-
 typedef struct _zend_fiber zend_fiber;
 
 struct _zend_fiber {

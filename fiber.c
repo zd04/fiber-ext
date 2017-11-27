@@ -20,7 +20,7 @@
 # define GC_DELREF(ref) --GC_REFCOUNT(ref)
 #endif/*}}}*/
 
-ZEND_API zend_class_entry *zend_ce_fiber;
+static zend_class_entry *zend_ce_fiber;
 static zend_object_handlers zend_fiber_handlers;
 
 static zend_object *zend_fiber_create(zend_class_entry *ce);
@@ -35,30 +35,31 @@ static zend_op fiber_terminate_op[2];
 
 ZEND_DECLARE_MODULE_GLOBALS(fiber)
 
+static PHP_INI_MH(OnUpdateFiberStackSize)
+{/*{{{*/
+	OnUpdateLong(entry, new_value, mh_arg1, mh_arg2, mh_arg3, stage);
+
+	if (FIBER_G(stack_size) < 0) {
+		FIBER_G(stack_size) = 4096;
+	}
+
+	return SUCCESS;
+}/*}}}*/
+
 /* {{{ PHP_INI
  */
 PHP_INI_BEGIN()
-    STD_PHP_INI_ENTRY("fiber.stack_size", "4096", PHP_INI_SYSTEM, OnUpdateLong, stack_size, zend_fiber_globals, fiber_globals)
+    STD_PHP_INI_ENTRY("fiber.stack_size", "4096", PHP_INI_SYSTEM, OnUpdateFiberStackSize, stack_size, zend_fiber_globals, fiber_globals)
 PHP_INI_END()
 /* }}} */
 
-/* {{{ zend_fiber_init_globals
- */
-static void zend_fiber_init_globals(zend_fiber_globals *fiber_globals)
-{
-	memset(fiber_globals, 0, sizeof(zend_fiber_globals));
-}
-/* }}} */
-
-/* {{{ PHP_RINIT_FUNCTION
- */
-PHP_RINIT_FUNCTION(fiber)
+static PHP_GINIT_FUNCTION(fiber) /* {{{ */
 {
 #if defined(ZTS) && defined(COMPILE_DL_FIBER)
 	ZEND_TSRMLS_CACHE_UPDATE();
 #endif
 
-	return SUCCESS;
+	memset(fiber_globals, 0, sizeof(zend_fiber_globals));
 }
 /* }}} */
 
@@ -601,13 +602,7 @@ PHP_MINIT_FUNCTION(fiber)
 	REGISTER_FIBER_CLASS_CONST_LONG("STATUS_FINISHED", (zend_long)ZEND_FIBER_STATUS_FINISHED);
 	REGISTER_FIBER_CLASS_CONST_LONG("STATUS_DEAD", (zend_long)ZEND_FIBER_STATUS_DEAD);
 
-	ZEND_INIT_MODULE_GLOBALS(fiber, zend_fiber_init_globals, NULL);
-
 	REGISTER_INI_ENTRIES();
-
-	if (FIBER_G(stack_size) < 0) {
-		FIBER_G(stack_size) = 4096;
-	}
 
 	orig_interrupt_function = zend_interrupt_function;
 	zend_interrupt_function = fiber_interrupt_function;
@@ -646,11 +641,15 @@ zend_module_entry fiber_module_entry = {
 	NULL,				/* zend_function_entry */
 	PHP_MINIT(fiber),		/* PHP_MINIT - Module initialization */
 	PHP_MSHUTDOWN(fiber),		/* PHP_MSHUTDOWN - Module shutdown */
-	PHP_RINIT(fiber),		/* PHP_RINIT - Request initialization */
+	NULL,		/* PHP_RINIT - Request initialization */
 	NULL,				/* PHP_RSHUTDOWN - Request shutdown */
 	PHP_MINFO(fiber),		/* PHP_MINFO - Module info */
 	PHP_FIBER_VERSION,		/* Version */
-	STANDARD_MODULE_PROPERTIES
+	PHP_MODULE_GLOBALS(fiber),
+	PHP_GINIT(fiber),
+	NULL,
+	NULL,
+	STANDARD_MODULE_PROPERTIES_EX
 };
 /* }}} */
 
