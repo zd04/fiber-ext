@@ -12,16 +12,6 @@ extern zend_module_entry fiber_module_entry;
 ZEND_TSRMLS_CACHE_EXTERN()
 # endif
 
-#ifdef PHP_WIN32
-#	define PHP_FIBER_API __declspec(dllexport)
-#elif defined(__GNUC__) && __GNUC__ >= 4
-#	define PHP_FIBER_API __attribute__ ((visibility("default")))
-#else
-#	define PHP_FIBER_API
-#endif
-
-extern PHP_FIBER_API zend_class_entry *zend_ce_fiber;
-
 typedef struct _zend_fiber zend_fiber;
 
 struct _zend_fiber {
