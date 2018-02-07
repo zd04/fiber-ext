@@ -15,6 +15,9 @@
 #include "zend_closures.h"
 
 /* PHP 7.3 compatibility macro {{{*/
+#ifndef ZEND_CLOSURE_OBJECT
+# define ZEND_CLOSURE_OBJECT(func) (zend_object*)func->op_array.prototype
+#endif
 #ifndef GC_ADDREF
 # define GC_ADDREF(ref) ++GC_REFCOUNT(ref)
 # define GC_DELREF(ref) --GC_REFCOUNT(ref)
@@ -117,7 +120,7 @@ static void zend_fiber_close(zend_fiber *fiber) /* {{{ */
 			}
 			OBJ_RELEASE(object);
 		} else if (UNEXPECTED(EX_CALL_INFO() & ZEND_CALL_CLOSURE)) {
-			OBJ_RELEASE((zend_object*)execute_data->func->op_array.prototype);
+			OBJ_RELEASE(ZEND_CLOSURE_OBJECT(execute_data->func));
 		}
 
 		zend_vm_stack_free_extra_args(execute_data);
@@ -265,8 +268,7 @@ static int zend_fiber_start(zend_fiber *fiber, zval *params, uint32_t param_coun
 		ZVAL_COPY(param, arg);
 	}
 
-	ZEND_ASSERT(GC_TYPE((zend_object*)func->op_array.prototype) == IS_OBJECT);
-	GC_ADDREF((zend_object*)func->op_array.prototype);
+	GC_ADDREF(ZEND_CLOSURE_OBJECT(func));
 	ZEND_ADD_CALL_FLAG(call, ZEND_CALL_CLOSURE);
 
 	zend_init_func_execute_data(call, &func->op_array, NULL);
@@ -541,7 +543,7 @@ static const zend_function_entry fiber_functions[] = {/*{{{*/
 	ZEND_ME(Fiber, __construct, arginfo_fiber_create, ZEND_ACC_PUBLIC)
 	ZEND_ME(Fiber, reset,       arginfo_fiber_create, ZEND_ACC_PUBLIC)
 	ZEND_ME(Fiber, resume,      arginfo_fiber_resume, ZEND_ACC_PUBLIC)
-	ZEND_ME(Fiber, yield,       arginfo_fiber_yield , ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+	ZEND_ME(Fiber, yield,       arginfo_fiber_yield,  ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	ZEND_ME(Fiber, status,      arginfo_fiber_void,   ZEND_ACC_PUBLIC)
 	ZEND_ME(Fiber, __wakeup,    arginfo_fiber_void,   ZEND_ACC_PUBLIC)
 	ZEND_FE_END
