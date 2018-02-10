@@ -55,6 +55,7 @@ ZEND_BEGIN_MODULE_GLOBALS(fiber)
 	size_t orig_stack_page_size;
 
 	volatile zend_bool pending_interrupt;
+	volatile zend_bool release_this;
 ZEND_END_MODULE_GLOBALS(fiber)
 
 #define FIBER_G(v) ZEND_MODULE_GLOBALS_ACCESSOR(fiber, v)

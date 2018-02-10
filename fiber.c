@@ -363,6 +363,11 @@ ZEND_METHOD(Fiber, resume)
 	FIBER_G(next_fiber) = fiber;
 	FIBER_G(pending_interrupt) = 1;
 	EG(vm_interrupt) = 1;
+
+	if (UNEXPECTED(EX_CALL_INFO() & ZEND_CALL_RELEASE_THIS)) {
+		GC_ADDREF((zend_object *)fiber);
+		FIBER_G(release_this) = 1;
+	}
 }
 /* }}} */
 
@@ -443,6 +448,11 @@ static void fiber_interrupt_function(zend_execute_data *execute_data)/*{{{*/
 		if (UNEXPECTED(EG(exception))) {
 			zend_rethrow_exception(EG(current_execute_data));
 		}
+	}
+
+	if (UNEXPECTED(FIBER_G(release_this))) {
+		GC_DELREF((zend_object *)fiber);
+		FIBER_G(release_this) = 0;
 	}
 
 	if (orig_interrupt_function) {
