@@ -52,7 +52,7 @@ static PHP_INI_MH(OnUpdateFiberStackSize)
 /* {{{ PHP_INI
  */
 PHP_INI_BEGIN()
-    STD_PHP_INI_ENTRY("fiber.stack_size", "4096", PHP_INI_SYSTEM, OnUpdateFiberStackSize, stack_size, zend_fiber_globals, fiber_globals)
+	STD_PHP_INI_ENTRY("fiber.stack_size", "4096", PHP_INI_SYSTEM, OnUpdateFiberStackSize, stack_size, zend_fiber_globals, fiber_globals)
 PHP_INI_END()
 /* }}} */
 
@@ -88,8 +88,8 @@ static void zend_fiber_close(zend_fiber *fiber) /* {{{ */
 	}
 
 	if (fiber->status == ZEND_FIBER_STATUS_FINISHED ||
-	    fiber->status == ZEND_FIBER_STATUS_INIT ||
-	    fiber->status == ZEND_FIBER_STATUS_DEAD) {
+			fiber->status == ZEND_FIBER_STATUS_INIT ||
+			fiber->status == ZEND_FIBER_STATUS_DEAD) {
 		return;
 	}
 
@@ -257,8 +257,7 @@ static int zend_fiber_start(zend_fiber *fiber, zval *params, uint32_t param_coun
 				}
 			}
 		} else {
-			if (Z_ISREF_P(arg) &&
-			    !(func->common.fn_flags & ZEND_ACC_CALL_VIA_TRAMPOLINE)) {
+			if (Z_ISREF_P(arg) && !(func->common.fn_flags & ZEND_ACC_CALL_VIA_TRAMPOLINE)) {
 				/* don't separate references for __call */
 				arg = Z_REFVAL_P(arg);
 			}
@@ -292,7 +291,7 @@ static int zend_fiber_start(zend_fiber *fiber, zval *params, uint32_t param_coun
 /* }}} */
 
 /* {{{ proto Fiber Fiber::__construct(Closure closure, int stack_size)
-   Create a Fiber from a closure. */
+ * Create a Fiber from a closure. */
 ZEND_METHOD(Fiber, __construct)
 {
 	zval *closure = NULL;
@@ -359,7 +358,7 @@ ZEND_METHOD(Fiber, resume)
 /* }}} */
 
 /* {{{ proto Fiber Fiber::reset(Closure closure)
-   Create a Fiber from a closure. */
+ * Create a Fiber from a closure. */
 ZEND_METHOD(Fiber, reset)
 {
 	zval *closure = NULL;
@@ -549,8 +548,8 @@ static const zend_function_entry fiber_functions[] = {/*{{{*/
 	ZEND_FE_END
 };/*}}}*/
 
- /* {{{ PHP_MINIT_FUNCTION
-  **/
+/* {{{ PHP_MINIT_FUNCTION
+ **/
 PHP_MINIT_FUNCTION(fiber)
 {
 	zend_class_entry ce;
