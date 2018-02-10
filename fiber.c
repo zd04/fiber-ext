@@ -548,7 +548,7 @@ ZEND_METHOD(Fiber, __wakeup)
 }
 /* }}} */
 
-/* {{{ proto mixed Fiber::throw(Exception exception)
+/* {{{ proto mixed Fiber::throw(Throwable exception)
  * Throws an exception into the fiber */
 ZEND_METHOD(Fiber, throw)
 {
