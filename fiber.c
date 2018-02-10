@@ -162,7 +162,7 @@ static void zend_fiber_free_storage(zend_object *object) /* {{{ */
 
 	zend_fiber_close(fiber);
 
-	zval_ptr_dtor(&fiber->closure);
+	zval_ptr_dtor(&fiber->callable);
 
 	zend_object_std_dtor(&fiber->std);
 }
@@ -193,8 +193,9 @@ static int zend_fiber_start(zend_fiber *fiber, zval *params, uint32_t param_coun
 	size_t current_stack_page_size;
 	zend_execute_data *fiber_frame;
 
-	if (!zend_is_callable_ex(&fiber->closure, NULL, IS_CALLABLE_CHECK_SILENT, NULL, &fci_cache, &error)) {
+	if (!zend_is_callable_ex(&fiber->callable, NULL, IS_CALLABLE_CHECK_SILENT, NULL, &fci_cache, &error)) {
 		zend_error(E_WARNING, "Attempt to start non callable Fiber, %s", error);
+		efree(error);
 		return FAILURE;
 	}
 
@@ -267,8 +268,16 @@ static int zend_fiber_start(zend_fiber *fiber, zval *params, uint32_t param_coun
 		ZVAL_COPY(param, arg);
 	}
 
-	GC_ADDREF(ZEND_CLOSURE_OBJECT(func));
-	ZEND_ADD_CALL_FLAG(call, ZEND_CALL_CLOSURE);
+	if (UNEXPECTED(func->op_array.fn_flags & ZEND_ACC_CLOSURE)) {
+		uint32_t call_info;
+
+		GC_ADDREF(ZEND_CLOSURE_OBJECT(func));
+		call_info = ZEND_CALL_CLOSURE;
+		if (func->common.fn_flags & ZEND_ACC_FAKE_CLOSURE) {
+			call_info |= ZEND_CALL_FAKE_CLOSURE;
+		}
+		ZEND_ADD_CALL_FLAG(call, call_info);
+	}
 
 	zend_init_func_execute_data(call, &func->op_array, NULL);
 	call->prev_execute_data = fiber_frame;
@@ -290,17 +299,17 @@ static int zend_fiber_start(zend_fiber *fiber, zval *params, uint32_t param_coun
 }
 /* }}} */
 
-/* {{{ proto Fiber Fiber::__construct(Closure closure, int stack_size)
- * Create a Fiber from a closure. */
+/* {{{ proto Fiber Fiber::__construct(callable, int stack_size)
+ * Create a Fiber from a callable. */
 ZEND_METHOD(Fiber, __construct)
 {
-	zval *closure = NULL;
+	zval *callable = NULL;
 	zend_fiber *fiber = NULL;
 	zend_long stack_size = FIBER_G(stack_size);
 
 	ZEND_PARSE_PARAMETERS_START(0, 2)
 		Z_PARAM_OPTIONAL
-		Z_PARAM_OBJECT_OF_CLASS(closure, zend_ce_closure)
+		Z_PARAM_ZVAL(callable);
 		Z_PARAM_LONG(stack_size);
 	ZEND_PARSE_PARAMETERS_END();
 
@@ -308,8 +317,8 @@ ZEND_METHOD(Fiber, __construct)
 	fiber->status = ZEND_FIBER_STATUS_INIT;
 	fiber->stack_size = stack_size;
 
-	if (closure) {
-		ZVAL_COPY(&fiber->closure, closure);
+	if (callable) {
+		ZVAL_COPY(&fiber->callable, callable);
 	}
 }
 /* }}} */
@@ -357,11 +366,11 @@ ZEND_METHOD(Fiber, resume)
 }
 /* }}} */
 
-/* {{{ proto Fiber Fiber::reset(Closure closure)
- * Create a Fiber from a closure. */
+/* {{{ proto Fiber Fiber::reset(Callable callable)
+ * Create a Fiber from a callable. */
 ZEND_METHOD(Fiber, reset)
 {
-	zval *closure = NULL;
+	zval *callable = NULL;
 	zend_fiber *fiber = NULL;
 
 	fiber = (zend_fiber *) Z_OBJ_P(getThis());
@@ -371,15 +380,15 @@ ZEND_METHOD(Fiber, reset)
 
 	ZEND_PARSE_PARAMETERS_START(0, 1)
 		Z_PARAM_OPTIONAL
-		Z_PARAM_OBJECT_OF_CLASS(closure, zend_ce_closure)
+		Z_PARAM_ZVAL(callable);
 	ZEND_PARSE_PARAMETERS_END();
 
 	zend_fiber_close(fiber);
 	fiber->status = ZEND_FIBER_STATUS_INIT;
 
-	if (closure) {
-		zval_ptr_dtor(&fiber->closure);
-		ZVAL_COPY(&fiber->closure, closure);
+	if (callable) {
+		zval_ptr_dtor(&fiber->callable);
+		ZVAL_COPY(&fiber->callable, callable);
 	}
 }
 /* }}} */
@@ -524,7 +533,7 @@ ZEND_METHOD(Fiber, __wakeup)
 /* }}} */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_fiber_create, 0, 0, 0)/*{{{*/
-	ZEND_ARG_OBJ_INFO(0, closure, Closure, 0)
+	ZEND_ARG_CALLABLE_INFO(0, callable, 0)
 ZEND_END_ARG_INFO()/*}}}*/
 
 ZEND_BEGIN_ARG_INFO(arginfo_fiber_void, 0)/*{{{*/

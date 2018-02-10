@@ -17,7 +17,7 @@ typedef struct _zend_fiber zend_fiber;
 struct _zend_fiber {
 	zend_object std;
 
-	zval closure;
+	zval callable;
 
 	/* The suspended execution context. */
 	zend_execute_data *root_execute_data;
