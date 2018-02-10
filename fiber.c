@@ -599,7 +599,7 @@ ZEND_BEGIN_ARG_INFO(arginfo_fiber_yield, 0)/*{{{*/
 ZEND_END_ARG_INFO()/*}}}*/
 
 ZEND_BEGIN_ARG_INFO(arginfo_fiber_throw, 0)/*{{{*/
-	 ZEND_ARG_OBJ_INFO(0, exception, Exception, 0)
+	 ZEND_ARG_OBJ_INFO(0, exception, Throwable, 0)
 ZEND_END_ARG_INFO()/*}}}*/
 
 static const zend_function_entry fiber_functions[] = {/*{{{*/
