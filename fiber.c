@@ -433,6 +433,12 @@ static void fiber_interrupt_function(zend_execute_data *execute_data)/*{{{*/
 			EG(vm_stack_end) = fiber->stack->end;
 			EG(vm_stack_page_size) = fiber->stack_size;
 			fiber->status = ZEND_FIBER_STATUS_RUNNING;
+
+			if (UNEXPECTED(FIBER_G(exception))) {
+				fiber->execute_data->opline--;
+				zend_throw_exception_internal(FIBER_G(exception));
+				fiber->execute_data->opline++;
+			}
 		} else {
 			/* Restore main execution context */
 			EG(current_execute_data) = FIBER_G(orig_execute_data);
@@ -542,6 +548,41 @@ ZEND_METHOD(Fiber, __wakeup)
 }
 /* }}} */
 
+/* {{{ proto mixed Fiber::throw(Exception exception)
+ * Throws an exception into the fiber */
+ZEND_METHOD(Fiber, throw)
+{
+	zval *exception;
+	zend_fiber *fiber;
+
+	ZEND_PARSE_PARAMETERS_START(1, 1)
+		Z_PARAM_ZVAL(exception)
+	ZEND_PARSE_PARAMETERS_END();
+
+	Z_TRY_ADDREF_P(exception);
+
+	fiber = (zend_fiber *) Z_OBJ_P(getThis());
+
+	if (fiber->status == ZEND_FIBER_STATUS_SUSPENDED) {
+		FIBER_G(exception) = exception;
+	} else {
+		zend_throw_exception_object(exception);
+		return;
+	}
+
+	fiber->root_execute_data->return_value = NULL;
+	fiber->original_fiber = FIBER_G(current_fiber);
+	FIBER_G(next_fiber) = fiber;
+	FIBER_G(pending_interrupt) = 1;
+	EG(vm_interrupt) = 1;
+
+	if (UNEXPECTED(EX_CALL_INFO() & ZEND_CALL_RELEASE_THIS)) {
+		GC_ADDREF((zend_object *)fiber);
+		FIBER_G(release_this) = 1;
+	}
+}
+/* }}} */
+
 ZEND_BEGIN_ARG_INFO_EX(arginfo_fiber_create, 0, 0, 0)/*{{{*/
 	ZEND_ARG_CALLABLE_INFO(0, callable, 0)
 ZEND_END_ARG_INFO()/*}}}*/
@@ -557,11 +598,16 @@ ZEND_BEGIN_ARG_INFO(arginfo_fiber_yield, 0)/*{{{*/
 	ZEND_ARG_INFO(0, ret)
 ZEND_END_ARG_INFO()/*}}}*/
 
+ZEND_BEGIN_ARG_INFO(arginfo_fiber_throw, 0)/*{{{*/
+	 ZEND_ARG_OBJ_INFO(0, exception, Exception, 0)
+ZEND_END_ARG_INFO()/*}}}*/
+
 static const zend_function_entry fiber_functions[] = {/*{{{*/
 	ZEND_ME(Fiber, __construct, arginfo_fiber_create, ZEND_ACC_PUBLIC)
 	ZEND_ME(Fiber, reset,       arginfo_fiber_create, ZEND_ACC_PUBLIC)
 	ZEND_ME(Fiber, resume,      arginfo_fiber_resume, ZEND_ACC_PUBLIC)
 	ZEND_ME(Fiber, yield,       arginfo_fiber_yield,  ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+	ZEND_ME(Fiber, throw,       arginfo_fiber_throw,  ZEND_ACC_PUBLIC)
 	ZEND_ME(Fiber, status,      arginfo_fiber_void,   ZEND_ACC_PUBLIC)
 	ZEND_ME(Fiber, __wakeup,    arginfo_fiber_void,   ZEND_ACC_PUBLIC)
 	ZEND_FE_END

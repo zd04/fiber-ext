@@ -48,6 +48,7 @@ ZEND_BEGIN_MODULE_GLOBALS(fiber)
 	zend_fiber *current_fiber;
 	zend_fiber *next_fiber;
 	zend_long   stack_size;
+	zval       *exception;
 
 	/* Suspended main execution context */
 	zend_execute_data *orig_execute_data;
