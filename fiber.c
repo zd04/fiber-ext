@@ -83,13 +83,7 @@ static void zend_fiber_close(zend_fiber *fiber) /* {{{ */
 	size_t original_stack_page_size;
 	zend_execute_data *execute_data;
 
-	if (UNEXPECTED(fiber->status == ZEND_FIBER_STATUS_DEAD)) {
-		return;
-	}
-
-	if (fiber->status == ZEND_FIBER_STATUS_FINISHED ||
-			fiber->status == ZEND_FIBER_STATUS_INIT ||
-			fiber->status == ZEND_FIBER_STATUS_DEAD) {
+	if (UNEXPECTED(fiber->status == ZEND_FIBER_STATUS_INIT)) {
 		return;
 	}
 
@@ -102,6 +96,14 @@ static void zend_fiber_close(zend_fiber *fiber) /* {{{ */
 	EG(vm_stack_end) = fiber->stack->end;
 	EG(vm_stack) = fiber->stack;
 	EG(vm_stack_page_size) = fiber->stack_size;
+
+	if (EXPECTED(fiber->status == ZEND_FIBER_STATUS_FINISHED)) {
+		goto LABEL_FREE_STACK;
+	}
+
+	if (UNEXPECTED(fiber->status == ZEND_FIBER_STATUS_DEAD)) {
+		goto LABEL_FREE_STACK;
+	}
 
 	execute_data = fiber->execute_data;
 
@@ -145,6 +147,7 @@ static void zend_fiber_close(zend_fiber *fiber) /* {{{ */
 		zend_vm_stack_free_call_frame(call);
 	}
 
+LABEL_FREE_STACK:
 	zend_vm_stack_destroy();
 
 	fiber->stack = NULL;
@@ -417,12 +420,13 @@ static void fiber_interrupt_function(zend_execute_data *execute_data)/*{{{*/
 		fiber = FIBER_G(current_fiber);
 		if (fiber) {
 			/* Suspend current fiber */
-			ZEND_ASSERT(fiber->status == ZEND_FIBER_STATUS_RUNNING);
-			fiber->execute_data = execute_data;
+			if (EXPECTED(fiber->status == ZEND_FIBER_STATUS_RUNNING)) {
+				fiber->execute_data = execute_data;
+				fiber->status = ZEND_FIBER_STATUS_SUSPENDED;
+			}
 			fiber->stack = EG(vm_stack);
 			fiber->stack->top = EG(vm_stack_top);
 			fiber->stack->end = EG(vm_stack_end);
-			fiber->status = ZEND_FIBER_STATUS_SUSPENDED;
 		} else {
 			/* Buckup main execution context */
 			FIBER_G(orig_execute_data) = execute_data;
@@ -481,14 +485,9 @@ static int fiber_terminate_opcode_handler(zend_execute_data *execute_data) /* {{
 
 	ZEND_ASSERT(fiber != NULL);
 
-	zend_vm_stack_destroy();
-
 	FIBER_G(next_fiber) = fiber->original_fiber;
 	FIBER_G(pending_interrupt) = 1;
-	fiber_interrupt_function(execute_data);
 
-	fiber->execute_data = NULL;
-	fiber->stack = NULL;
 	fiber->original_fiber = NULL;
 	fiber->send_value = NULL;
 	if (EG(exception)) {
@@ -496,6 +495,8 @@ static int fiber_terminate_opcode_handler(zend_execute_data *execute_data) /* {{
 	} else {
 		fiber->status = ZEND_FIBER_STATUS_FINISHED;
 	}
+
+	fiber_interrupt_function(execute_data);
 
 	return ZEND_USER_OPCODE_ENTER;
 }
