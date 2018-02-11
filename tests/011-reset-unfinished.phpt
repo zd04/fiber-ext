@@ -30,8 +30,8 @@ $f->reset();
 --EXPECTF--
 1
 
-Fatal error: Uncaught Error: Cannot reset unfinished Fiber in %s%e011.php:19
+Fatal error: Uncaught Error: Cannot reset unfinished Fiber in %s%e011-reset-unfinished.php:19
 Stack trace:
-#0 %s%e011.php(19): Fiber->reset()
+#0 %s%e011-reset-unfinished.php(19): Fiber->reset()
 #1 {main}
-  thrown in %s%e011.php on line 19
+  thrown in %s%e011-reset-unfinished.php on line 19

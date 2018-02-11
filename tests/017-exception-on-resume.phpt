@@ -32,6 +32,6 @@ try {
 }
 ?>
 --EXPECTF--
-#0 %s/tests/017.php(11): foo()
+#0 %s/tests/017-exception-on-resume.php(11): foo()
 #1 (0): bar()
 #2 {main}

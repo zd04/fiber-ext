@@ -194,12 +194,20 @@ static int zend_fiber_start(zend_fiber *fiber, zval *params, uint32_t param_coun
 	zend_execute_data *fiber_frame;
 
 	if (!zend_is_callable_ex(&fiber->callable, NULL, IS_CALLABLE_CHECK_SILENT, NULL, &fci_cache, &error)) {
-		zend_error(E_WARNING, "Attempt to start non callable Fiber, %s", error);
+		zend_throw_error(NULL, "Attempt to start non callable Fiber, %s", error);
 		efree(error);
 		return FAILURE;
 	}
 
 	func = fci_cache.function_handler;
+
+	if (param_count < func->common.required_num_args) {
+		zend_throw_error(zend_ce_argument_count_error,
+			"Too few arguments for callable given to Fiber, %d required, %d given",
+			func->common.required_num_args,
+			param_count);
+		return FAILURE;
+	}
 
 	current_stack = EG(vm_stack);
 	current_stack->top = EG(vm_stack_top);
@@ -349,12 +357,13 @@ ZEND_METHOD(Fiber, resume)
 					fiber->send_value = NULL;
 				}
 			} else {
-				zend_error(E_WARNING, "Attempt to resume Fiber with many arguments");
+				zend_throw_error(zend_ce_argument_count_error,
+					"Only one argument allowed when resuming an initialized Fiber");
 				return;
 			}
 		}
 	} else {
-		zend_error(E_WARNING, "Attempt to resume non suspended Fiber");
+		zend_throw_error(NULL, "Attempt to resume non suspended Fiber");
 		return;
 	}
 

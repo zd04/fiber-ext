@@ -17,7 +17,11 @@ $f->resume();
 var_dump($f->status() == Fiber::STATUS_SUSPENDED);
 $f->resume();
 var_dump($f->status() == Fiber::STATUS_FINISHED);
-$f->resume();
+try {
+    $f->resume();
+} catch (Error $e) {
+    echo $e->getMessage(), PHP_EOL;
+}
 var_dump($f->status() == Fiber::STATUS_FINISHED);
 
 $f = new Fiber(function () {
@@ -33,7 +37,6 @@ var_dump($f->status() == Fiber::STATUS_DEAD);
 bool(true)
 bool(true)
 bool(true)
-
-Warning: Attempt to resume non suspended Fiber in %s006.php on line %d
+Attempt to resume non suspended Fiber
 bool(true)
 bool(true)
