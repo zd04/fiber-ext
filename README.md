@@ -1,5 +1,7 @@
 # PHP-Fiber
 
+[![Build Status](https://travis-ci.org/fiberphp/fiber-ext.svg?branch=master)](https://travis-ci.org/fiberphp/fiber-ext)
+
 Fibers are primitives for implementing light weight cooperative concurrency in PHP.
 Basically they are a means of creating Closure that can be paused and resumed.
 The scheduling of fiber must be done by the programmer and not the VM.
