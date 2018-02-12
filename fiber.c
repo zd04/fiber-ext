@@ -615,16 +615,13 @@ PHP_MINIT_FUNCTION(fiber)
 	zend_set_user_opcode_handler(opcode, fiber_terminate_opcode_handler);
 
 	memset(fiber_terminate_op, 0, sizeof(fiber_terminate_op));
+	/* Also set op1_type, op2_type and result_type to IS_UNUSED */
+
 	fiber_terminate_op[0].opcode = opcode;
-	fiber_terminate_op[0].op1_type = IS_UNUSED;
-	fiber_terminate_op[0].op2_type = IS_UNUSED;
-	fiber_terminate_op[0].result_type = IS_UNUSED;
 	fiber_terminate_op[0].handler = fiber_terminate_opcode_handler;
+	zend_vm_set_opcode_handler_ex(fiber_terminate_op, 0, 0, 0);
 	fiber_terminate_op[1].opcode = opcode;
-	fiber_terminate_op[1].op1_type = IS_UNUSED;
-	fiber_terminate_op[1].op2_type = IS_UNUSED;
-	fiber_terminate_op[1].result_type = IS_UNUSED;
-	fiber_terminate_op[1].handler = fiber_terminate_opcode_handler;
+	zend_vm_set_opcode_handler_ex(fiber_terminate_op + 1, 0, 0, 0);
 
 	memset(&fiber_terminate_func, 0, sizeof(fiber_terminate_func));
 	fiber_terminate_func.type = ZEND_USER_FUNCTION;
