@@ -401,7 +401,7 @@ static void fiber_interrupt_function(zend_execute_data *execute_data)/*{{{*/
 			fiber->stack->top = EG(vm_stack_top);
 			fiber->stack->end = EG(vm_stack_end);
 		} else {
-			/* Buckup main execution context */
+			/* Backup main execution context */
 			FIBER_G(orig_execute_data) = execute_data;
 			FIBER_G(orig_stack) = EG(vm_stack);
 			FIBER_G(orig_stack)->top = EG(vm_stack_top);
@@ -661,6 +661,9 @@ PHP_MINIT_FUNCTION(fiber)
  */
 PHP_MSHUTDOWN_FUNCTION(fiber)
 {
+	zend_string_free(fiber_terminate_func.function_name);
+	fiber_terminate_func.function_name = NULL;
+
 	UNREGISTER_INI_ENTRIES();
 
 	return SUCCESS;
