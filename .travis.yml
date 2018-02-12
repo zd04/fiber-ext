@@ -1,0 +1,16 @@
+language: php
+php:
+  - nightly
+sudo: false
+addons:
+  apt:
+    packages:
+      - valgrind
+env:
+  matrix:
+    - TEST_PHP_ARGS="-q"
+    - TEST_PHP_ARGS="-q -m"
+before_script:
+  - phpize
+  - ./configure
+script: ./.travis.sh
