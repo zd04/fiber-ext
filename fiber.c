@@ -386,6 +386,7 @@ ZEND_METHOD(Fiber, resume)
 static void fiber_interrupt_function(zend_execute_data *execute_data)/*{{{*/
 {
 	zend_fiber *fiber;
+	zval *exception;
 
 	if (FIBER_G(pending_interrupt)) {
 		FIBER_G(pending_interrupt) = 0;
@@ -421,8 +422,11 @@ static void fiber_interrupt_function(zend_execute_data *execute_data)/*{{{*/
 			fiber->status = ZEND_FIBER_STATUS_RUNNING;
 
 			if (UNEXPECTED(FIBER_G(exception))) {
+				exception = FIBER_G(exception);
+				FIBER_G(exception) = NULL;
+
 				fiber->execute_data->opline--;
-				zend_throw_exception_internal(FIBER_G(exception));
+				zend_throw_exception_internal(exception);
 				fiber->execute_data->opline++;
 			}
 		} else {
@@ -553,7 +557,7 @@ ZEND_METHOD(Fiber, throw)
 		return;
 	}
 
-	fiber->root_execute_data->return_value = NULL;
+	fiber->root_execute_data->return_value = USED_RET() ? return_value : NULL;
 	fiber->original_fiber = FIBER_G(current_fiber);
 	FIBER_G(next_fiber) = fiber;
 	FIBER_G(pending_interrupt) = 1;
