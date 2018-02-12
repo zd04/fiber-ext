@@ -618,7 +618,6 @@ PHP_MINIT_FUNCTION(fiber)
 	/* Also set op1_type, op2_type and result_type to IS_UNUSED */
 
 	fiber_terminate_op[0].opcode = opcode;
-	fiber_terminate_op[0].handler = fiber_terminate_opcode_handler;
 	zend_vm_set_opcode_handler_ex(fiber_terminate_op, 0, 0, 0);
 	fiber_terminate_op[1].opcode = opcode;
 	zend_vm_set_opcode_handler_ex(fiber_terminate_op + 1, 0, 0, 0);
