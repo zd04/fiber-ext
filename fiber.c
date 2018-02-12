@@ -195,6 +195,7 @@ static int zend_fiber_start(zend_fiber *fiber, zval *params, uint32_t param_coun
 	zend_vm_stack current_stack;
 	size_t current_stack_page_size;
 	zend_execute_data *fiber_frame;
+	uint32_t i;
 
 	if (!zend_is_callable_ex(&fiber->callable, NULL, IS_CALLABLE_CHECK_SILENT, NULL, &fci_cache, &error)) {
 		zend_throw_error(NULL, "Attempt to start non callable Fiber, %s", error);
@@ -238,7 +239,7 @@ static int zend_fiber_start(zend_fiber *fiber, zval *params, uint32_t param_coun
 	call = zend_vm_stack_push_call_frame(ZEND_CALL_NESTED_FUNCTION | ZEND_CALL_DYNAMIC,
 		func, param_count, fci_cache.called_scope, fci_cache.object);
 
-	for (uint32_t i=0; i<param_count; i++) {
+	for (i = 0; i < param_count; i++) {
 		zval *param;
 		zval *arg = &params[i];
 
