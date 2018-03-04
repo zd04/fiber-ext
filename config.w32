@@ -1,4 +1,4 @@
-ARG_ENABLE('fiber', 'fiber support', 'yes');
+ARG_ENABLE('fiber', 'fiber support', 'no');
 
 if (PHP_FIBER != 'no') {
 	AC_DEFINE('HAVE_FIBER', 1, 'fiber support enabled');
